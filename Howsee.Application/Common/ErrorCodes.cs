@@ -14,4 +14,8 @@ public static class ErrorCodes
     public const string InvalidWebhookSignature = "INVALID_WEBHOOK_SIGNATURE";
     public const string InternalError = "INTERNAL_ERROR";
     public const string InvoiceNotFound = "INVOICE_NOT_FOUND";
+    public const string TourNotFound = "TOUR_NOT_FOUND";
+    public const string TourAccessDenied = "TOUR_ACCESS_DENIED";
+    public const string TourExpired = "TOUR_EXPIRED";
+    public const string InvalidTourToken = "INVALID_TOUR_TOKEN";
 }

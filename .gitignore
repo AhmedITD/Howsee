@@ -1,0 +1,21 @@
+# Build
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+
+# IDE
+.idea/
+.vs/
+*.user
+*.suo
+
+# Misc
+*.log
+.env
+.env.local
+appsettings.*.local.json
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

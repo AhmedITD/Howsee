@@ -21,4 +21,5 @@ public class User : BaseEntity, IAuditable, ISoftDeletable
 
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
+    public ICollection<Tour> Tours { get; set; } = new List<Tour>();
 }

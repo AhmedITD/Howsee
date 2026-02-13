@@ -4,6 +4,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Howsee.Api.Json;
@@ -21,6 +22,7 @@ using Howsee.Infrastructure.Services.Auth;
 using Howsee.Infrastructure.Services.Sinks;
 using Howsee.Application.Interfaces;
 using Howsee.Application.Interfaces.Payments;
+using Howsee.Application.Interfaces.Tours;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -97,6 +99,10 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddHttpClient<IOtpiqService, OtpiqService>();
 builder.Services.AddHttpClient<IQiCardService, QiCardService>();
 
+builder.Services.Configure<Howsee.Infrastructure.Services.TourLinkOptions>(
+    builder.Configuration.GetSection(Howsee.Infrastructure.Services.TourLinkOptions.SectionName));
+builder.Services.AddScoped<ITourLinkTokenService, TourLinkTokenService>();
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(UserRole.Administrator.ToStringValue(), policy =>
@@ -135,6 +141,15 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("tour-public", config =>
+    {
+        config.Window = TimeSpan.FromMinutes(1);
+        config.PermitLimit = 60;
+    });
+});
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -155,6 +170,7 @@ app.UseSwaggerUI(o => o.DisplayRequestDuration());
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
