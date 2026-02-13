@@ -17,6 +17,8 @@ public class TourConfiguration : IEntityTypeConfiguration<Tour>
         builder.Property(x => x.StartSweepId).HasMaxLength(100);
         builder.Property(x => x.PasswordHash).HasMaxLength(500);
         builder.Property(x => x.IsActive).IsRequired();
+        builder.Property(x => x.ShareToken).HasMaxLength(64).IsRequired();
+        builder.HasIndex(x => x.ShareToken).IsUnique();
 
         builder.HasOne(x => x.Owner)
             .WithMany(u => u.Tours)

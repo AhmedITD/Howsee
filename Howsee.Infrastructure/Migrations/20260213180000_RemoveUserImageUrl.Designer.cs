@@ -3,6 +3,7 @@ using System;
 using Howsee.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Howsee.Infrastructure.Migrations
 {
     [DbContext(typeof(HowseeDbContext))]
-    partial class HowseeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260213180000_RemoveUserImageUrl")]
+    partial class RemoveUserImageUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -272,11 +275,6 @@ namespace Howsee.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("ShareToken")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
                     b.Property<string>("StartSweepId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -295,9 +293,6 @@ namespace Howsee.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("ShareToken")
-                        .IsUnique();
 
                     b.ToTable("Tours", (string)null);
                 });

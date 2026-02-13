@@ -5,6 +5,7 @@ using Howsee.Application.Interfaces;
 using Howsee.Application.Interfaces.Auth;
 using Howsee.Application.Interfaces.Invoices;
 using Howsee.Application.Interfaces.Payments;
+using Howsee.Application.Interfaces.Properties;
 using Howsee.Application.Interfaces.Tours;
 using Howsee.Application.Services;
 
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
         services.AddScoped<ITourService, TourService>();
+        services.AddScoped<IPropertyService, PropertyService>();
 
         TypeAdapterConfig.GlobalSettings.Scan(typeof(DependencyInjection).Assembly);
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);

@@ -99,9 +99,9 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddHttpClient<IOtpiqService, OtpiqService>();
 builder.Services.AddHttpClient<IQiCardService, QiCardService>();
 
-builder.Services.Configure<Howsee.Infrastructure.Services.TourLinkOptions>(
-    builder.Configuration.GetSection(Howsee.Infrastructure.Services.TourLinkOptions.SectionName));
-builder.Services.AddScoped<ITourLinkTokenService, TourLinkTokenService>();
+builder.Services.Configure<Howsee.Infrastructure.Services.MatterportApiOptions>(
+    builder.Configuration.GetSection(Howsee.Infrastructure.Services.MatterportApiOptions.SectionName));
+builder.Services.AddHttpClient<Howsee.Application.Interfaces.Tours.IMatterportApiClient, Howsee.Infrastructure.Services.MatterportApiClient>();
 
 builder.Services.AddAuthorization(options =>
 {

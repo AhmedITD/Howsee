@@ -15,6 +15,11 @@ const routes = [
     path: '/dashboard/tours',
     name: 'DashboardTours',
     component: () => import('../views/DashboardToursPage.vue')
+  },
+  {
+    path: '/dashboard/properties',
+    name: 'DashboardProperties',
+    component: () => import('../views/DashboardPropertiesPage.vue')
   }
 ]
 

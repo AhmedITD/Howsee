@@ -18,6 +18,7 @@ public class HowseeDbContext : DbContext, IHowseeDbContext
     public DbSet<PhoneVerificationCode> PhoneVerificationCodes { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<Tour> Tours { get; set; }
+    public DbSet<Property> Properties { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

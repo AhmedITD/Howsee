@@ -11,6 +11,7 @@ public interface IHowseeDbContext
     DbSet<PhoneVerificationCode> PhoneVerificationCodes { get; set; }
     DbSet<Invoice> Invoices { get; set; }
     DbSet<Tour> Tours { get; set; }
+    DbSet<Property> Properties { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     int SaveChanges();

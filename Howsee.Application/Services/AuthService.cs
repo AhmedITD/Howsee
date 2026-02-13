@@ -43,8 +43,7 @@ public class AuthService(
             FullName = request.FullName.Trim(),
             Phone = phone,
             PasswordHash = passwordService.HashPassword(request.Password),
-            Role = UserRole.Buyer,
-            ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim()
+            Role = UserRole.Buyer
         };
 
         dbContext.Users.Add(user);

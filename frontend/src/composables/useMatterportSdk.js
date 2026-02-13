@@ -1,6 +1,7 @@
 import { ref, onUnmounted } from 'vue'
 
-const SDK_BOOTSTRAP_VERSION = '3.0.0-0-g0517b8d76c'
+// Centralized SDK version for easy upgrades; see https://matterport.github.io/showcase-sdk/sdk_changelog.html
+const SDK_BOOTSTRAP_VERSION = import.meta.env.VITE_MATTERPORT_SDK_VERSION || '3.0.0-0-g0517b8d76c'
 
 /**
  * Load Matterport SDK and connect to the Showcase iframe.
@@ -14,8 +15,13 @@ export function useMatterportSdk(iframeRef, applicationKey) {
   const mpSdk = ref(null)
   const currentSweep = ref({ sid: '', id: '' })
   const sweeps = ref([])
-  let unsubscribeCurrent = null
-  let unsubscribeData = null
+  let subscriptionCurrent = null
+  let subscriptionData = null
+
+  function cancelSubscription(sub) {
+    if (sub && typeof sub.cancel === 'function') sub.cancel()
+    else if (typeof sub === 'function') sub()
+  }
 
   async function loadSdk() {
     if (!applicationKey) {
@@ -39,13 +45,13 @@ export function useMatterportSdk(iframeRef, applicationKey) {
       mpSdk.value = sdk
 
       if (sdk.Sweep?.current?.subscribe) {
-        unsubscribeCurrent = sdk.Sweep.current.subscribe((sweep) => {
+        subscriptionCurrent = sdk.Sweep.current.subscribe((sweep) => {
           currentSweep.value = { sid: sweep?.sid ?? '', id: sweep?.id ?? '' }
         })
       }
       if (sdk.Sweep?.data?.subscribe) {
         const list = []
-        unsubscribeData = sdk.Sweep.data.subscribe({
+        subscriptionData = sdk.Sweep.data.subscribe({
           onAdded(index, item) {
             if (item) list.push({ id: item.id, sid: item.sid })
             sweeps.value = [...list]
@@ -81,9 +87,68 @@ export function useMatterportSdk(iframeRef, applicationKey) {
     })
   }
 
+  /**
+   * Create a sweep graph for pathfinding. Call dispose() when done.
+   * @returns {Promise<{ graph: any, dispose: () => void } | null>}
+   */
+  async function createSweepGraph() {
+    const sdk = mpSdk.value
+    if (!sdk?.Sweep?.createGraph) return null
+    try {
+      const graph = await sdk.Sweep.createGraph()
+      return {
+        graph,
+        dispose() {
+          if (graph && typeof graph.dispose === 'function') graph.dispose()
+        }
+      }
+    } catch (_) {
+      return null
+    }
+  }
+
+  /**
+   * Find path between two sweeps using A*. Returns ordered list of sweep IDs.
+   * @param {string} startSweepId
+   * @param {string} endSweepId
+   * @returns {Promise<string[]>}
+   */
+  async function findPath(startSweepId, endSweepId) {
+    const sweepGraph = await createSweepGraph()
+    if (!sweepGraph) return []
+    try {
+      const sdk = mpSdk.value
+      if (!sdk?.Graph?.createAStarRunner) return []
+      const startVertex = sweepGraph.graph.vertex(startSweepId)
+      const endVertex = sweepGraph.graph.vertex(endSweepId)
+      if (!startVertex || !endVertex) return []
+      const runner = sdk.Graph.createAStarRunner(sweepGraph.graph, startVertex, endVertex)
+      const result = runner.exec()
+      const path = result?.path
+      if (!path || !Array.isArray(path)) return []
+      return path.map((v) => (v && (v.id ?? v.data?.id)) || '').filter(Boolean)
+    } finally {
+      sweepGraph.dispose()
+    }
+  }
+
+  /**
+   * Play a guided tour by moving through sweep IDs with a delay between each.
+   * @param {string[]} sweepIds
+   * @param {number} delayMs
+   * @returns {Promise<void>}
+   */
+  async function playPath(sweepIds, delayMs = 2500) {
+    if (!Array.isArray(sweepIds) || sweepIds.length === 0) return
+    for (const id of sweepIds) {
+      await moveTo(id)
+      if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs))
+    }
+  }
+
   onUnmounted(() => {
-    if (typeof unsubscribeCurrent === 'function') unsubscribeCurrent()
-    if (typeof unsubscribeData === 'function') unsubscribeData()
+    cancelSubscription(subscriptionCurrent)
+    cancelSubscription(subscriptionData)
   })
 
   return {
@@ -92,6 +157,9 @@ export function useMatterportSdk(iframeRef, applicationKey) {
     currentSweep,
     sweeps,
     moveTo,
+    createSweepGraph,
+    findPath,
+    playPath,
     ready,
     error
   }

@@ -13,12 +13,26 @@ namespace Howsee.Application.Services;
 
 public class TourService(
     IHowseeDbContext dbContext,
-    ITourLinkTokenService tokenService,
     IPasswordService passwordService,
+    IMatterportApiClient matterportApiClient,
     Microsoft.Extensions.Configuration.IConfiguration configuration) : ITourService
 {
     public async Task<ApiResponse<TourResponse>> CreateTour(CreateTourRequest request, int ownerId, CancellationToken cancellationToken = default)
     {
+        if (matterportApiClient.IsConfigured)
+        {
+            try
+            {
+                var exists = await matterportApiClient.ValidateModelExistsAsync(request.MatterportModelId, cancellationToken);
+                if (!exists)
+                    return ApiResponse<TourResponse>.ErrorResponse("Matterport model not found or not accessible.", code: ErrorCodes.InvalidMatterportModel);
+            }
+            catch (MatterportApiException ex)
+            {
+                return ApiResponse<TourResponse>.ErrorResponse(ex.Message, code: ErrorCodes.InvalidMatterportModel);
+            }
+        }
+
         var tour = new Tour
         {
             OwnerId = ownerId,
@@ -27,13 +41,13 @@ public class TourService(
             StartSweepId = request.StartSweepId,
             PasswordHash = string.IsNullOrEmpty(request.Password) ? null : passwordService.HashPassword(request.Password),
             ExpiresAt = request.ExpiresAt,
-            IsActive = true
+            IsActive = true,
+            ShareToken = Guid.NewGuid().ToString("N")
         };
         dbContext.Tours.Add(tour);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var response = tour.Adapt<TourResponse>();
-        response.ShareToken = tokenService.Generate(tour.Id);
         response.HasPassword = !string.IsNullOrEmpty(tour.PasswordHash);
         return ApiResponse<TourResponse>.SuccessResponse(response);
     }
@@ -43,6 +57,20 @@ public class TourService(
         var tour = await dbContext.Tours.FirstOrDefaultAsync(t => t.Id == tourId && t.OwnerId == ownerId, cancellationToken);
         if (tour == null)
             return ApiResponse<TourResponse>.ErrorResponse("Tour not found.", code: ErrorCodes.TourNotFound);
+
+        if (request.MatterportModelId != null && matterportApiClient.IsConfigured)
+        {
+            try
+            {
+                var exists = await matterportApiClient.ValidateModelExistsAsync(request.MatterportModelId, cancellationToken);
+                if (!exists)
+                    return ApiResponse<TourResponse>.ErrorResponse("Matterport model not found or not accessible.", code: ErrorCodes.InvalidMatterportModel);
+            }
+            catch (MatterportApiException ex)
+            {
+                return ApiResponse<TourResponse>.ErrorResponse(ex.Message, code: ErrorCodes.InvalidMatterportModel);
+            }
+        }
 
         if (request.Title != null) tour.Title = request.Title;
         if (request.MatterportModelId != null) tour.MatterportModelId = request.MatterportModelId;
@@ -54,7 +82,6 @@ public class TourService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var response = tour.Adapt<TourResponse>();
-        response.ShareToken = tokenService.Generate(tour.Id);
         response.HasPassword = !string.IsNullOrEmpty(tour.PasswordHash);
         return ApiResponse<TourResponse>.SuccessResponse(response);
     }
@@ -66,7 +93,6 @@ public class TourService(
             return ApiResponse<TourResponse>.ErrorResponse("Tour not found.", code: ErrorCodes.TourNotFound);
 
         var response = tour.Adapt<TourResponse>();
-        response.ShareToken = tokenService.Generate(tour.Id);
         response.HasPassword = !string.IsNullOrEmpty(tour.PasswordHash);
         return ApiResponse<TourResponse>.SuccessResponse(response);
     }
@@ -81,7 +107,6 @@ public class TourService(
         var list = tours.Select(t =>
         {
             var r = t.Adapt<TourResponse>();
-            r.ShareToken = tokenService.Generate(t.Id);
             r.HasPassword = !string.IsNullOrEmpty(t.PasswordHash);
             return r;
         }).ToList();
@@ -102,14 +127,9 @@ public class TourService(
 
     public async Task<ApiResponse<TourViewConfigResponse>> GetViewConfigAsync(string token, string? password, CancellationToken cancellationToken = default)
     {
-        var tourId = tokenService.Validate(token);
-        if (tourId == null)
-            return ApiResponse<TourViewConfigResponse>.ErrorResponse("Invalid or expired link.", code: ErrorCodes.InvalidTourToken);
-
-        var tour = await dbContext.Tours.AsNoTracking().FirstOrDefaultAsync(t => t.Id == tourId.Value, cancellationToken);
+        var tour = await dbContext.Tours.AsNoTracking().FirstOrDefaultAsync(t => t.ShareToken == token, cancellationToken);
         if (tour == null)
-            return ApiResponse<TourViewConfigResponse>.ErrorResponse("Tour not found.", code: ErrorCodes.TourNotFound);
-
+            return ApiResponse<TourViewConfigResponse>.ErrorResponse("Invalid or expired link.", code: ErrorCodes.InvalidTourToken);
         if (!tour.IsActive)
             return ApiResponse<TourViewConfigResponse>.ErrorResponse("This tour is not available.", code: ErrorCodes.TourAccessDenied);
 

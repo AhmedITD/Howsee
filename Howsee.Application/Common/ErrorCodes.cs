@@ -18,4 +18,8 @@ public static class ErrorCodes
     public const string TourAccessDenied = "TOUR_ACCESS_DENIED";
     public const string TourExpired = "TOUR_EXPIRED";
     public const string InvalidTourToken = "INVALID_TOUR_TOKEN";
+    public const string InvalidMatterportModel = "INVALID_MATTERPORT_MODEL";
+    /// <summary>Matterport model exists but is locked; unlock in Matterport account to access.</summary>
+    public const string MatterportModelLocked = "MATTERPORT_MODEL_LOCKED";
+    public const string PropertyNotFound = "PROPERTY_NOT_FOUND";
 }

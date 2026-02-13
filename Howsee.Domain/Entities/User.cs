@@ -13,7 +13,6 @@ public class User : BaseEntity, IAuditable, ISoftDeletable
     [JsonIgnore]
     public string PasswordHash { get; set; } = null!;
     public UserRole Role { get; set; }
-    public string? ImageUrl { get; set; }
 
     public int? UpdatedBy { get; set; }
     public bool IsDeleted { get; set; }
@@ -22,4 +21,5 @@ public class User : BaseEntity, IAuditable, ISoftDeletable
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     public ICollection<Tour> Tours { get; set; } = new List<Tour>();
+    public ICollection<Property> Properties { get; set; } = new List<Property>();
 }
