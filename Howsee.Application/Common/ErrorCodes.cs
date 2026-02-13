@@ -22,4 +22,5 @@ public static class ErrorCodes
     /// <summary>Matterport model exists but is locked; unlock in Matterport account to access.</summary>
     public const string MatterportModelLocked = "MATTERPORT_MODEL_LOCKED";
     public const string PropertyNotFound = "PROPERTY_NOT_FOUND";
+    public const string InvalidOrInactivePlan = "INVALID_OR_INACTIVE_PLAN";
 }

@@ -12,6 +12,8 @@ public interface IHowseeDbContext
     DbSet<Invoice> Invoices { get; set; }
     DbSet<Tour> Tours { get; set; }
     DbSet<Property> Properties { get; set; }
+    DbSet<PricingPlan> PricingPlans { get; set; }
+    DbSet<Subscription> Subscriptions { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     int SaveChanges();

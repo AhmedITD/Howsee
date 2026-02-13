@@ -19,5 +19,9 @@ public class Invoice : ISoftDeletable, IAuditable
     public DateTime? UpdatedAt { get; set; }
     public int? UpdatedBy { get; set; }
 
+    public int? PricingPlanId { get; set; }
+
     public User User { get; set; } = null!;
+    public PricingPlan? PricingPlan { get; set; }
+    public Subscription? Subscription { get; set; }
 }

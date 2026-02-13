@@ -9,6 +9,7 @@ using Howsee.Application.Interfaces;
 using Howsee.Application.Interfaces.Auth;
 using Howsee.Application.Interfaces.Invoices;
 using Howsee.Application.Interfaces.Payments;
+using Howsee.Application.Interfaces.Pricing;
 using Howsee.Domain.Entities;
 using Howsee.Domain.Enums;
 
@@ -18,21 +19,24 @@ public class InvoiceService(
     IHowseeDbContext dbContext,
     ICurrentUser currentUser,
     IQiCardService qiCardService,
-    IConfiguration configuration) : IInvoiceService
+    IConfiguration configuration,
+    IPricingPlanService pricingPlanService) : IInvoiceService
 {
     public async Task<ApiResponse<InvoiceResponse>> CreateInvoice(InvoiceRequest request, CancellationToken cancellationToken = default)
     {
-        if (request.Amount <= 0)
-            return ApiResponse<InvoiceResponse>.ErrorResponse("Amount must be greater than zero.", code: ErrorCodes.ValidationFailed);
+        var plan = await pricingPlanService.GetByKeyAsync(request.PlanKey, cancellationToken);
+        if (plan == null)
+            return ApiResponse<InvoiceResponse>.ErrorResponse("Invalid or inactive plan.", code: ErrorCodes.InvalidOrInactivePlan);
 
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
             UserId = currentUser.Id,
-            TotalAmount = request.Amount,
-            Currency = request.Currency ?? "IQD",
-            Description = request.Description,
-            Status = InvoiceStatus.Draft
+            TotalAmount = plan.Amount,
+            Currency = plan.Currency,
+            Description = request.Description ?? plan.Name,
+            Status = InvoiceStatus.Draft,
+            PricingPlanId = plan.Id
         };
 
         dbContext.Invoices.Add(invoice);
@@ -85,7 +89,9 @@ public class InvoiceService(
 
     public async Task<ApiResponse<bool>> MarkAsPaid(Guid invoiceId, CancellationToken cancellationToken = default)
     {
-        var invoice = await dbContext.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId, cancellationToken);
+        var invoice = await dbContext.Invoices
+            .Include(i => i.PricingPlan)
+            .FirstOrDefaultAsync(i => i.Id == invoiceId, cancellationToken);
         if (invoice == null)
             return ApiResponse<bool>.ErrorResponse("Invoice not found.", code: ErrorCodes.InvoiceNotFound);
         if (invoice.Status == InvoiceStatus.Paid)
@@ -93,8 +99,47 @@ public class InvoiceService(
 
         invoice.Status = InvoiceStatus.Paid;
         invoice.PaidAt = DateTime.UtcNow;
+
+        if (invoice.PricingPlanId.HasValue && invoice.PricingPlan != null &&
+            string.Equals(invoice.PricingPlan.Unit, "month", StringComparison.OrdinalIgnoreCase))
+        {
+            await CreateOrExtendSubscriptionAsync(invoice, cancellationToken);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return ApiResponse<bool>.SuccessResponse(true);
+    }
+
+    private async Task CreateOrExtendSubscriptionAsync(Invoice invoice, CancellationToken cancellationToken)
+    {
+        var paidAt = invoice.PaidAt ?? DateTime.UtcNow;
+        var userId = invoice.UserId;
+        var planId = invoice.PricingPlanId!.Value;
+
+        var existing = await dbContext.Subscriptions
+            .Where(s => s.UserId == userId && s.PricingPlanId == planId && s.Status == SubscriptionStatus.Active && s.EndDate >= paidAt.Date)
+            .OrderByDescending(s => s.EndDate)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (existing != null)
+        {
+            existing.EndDate = existing.EndDate.AddMonths(1);
+            existing.InvoiceId = invoice.Id;
+        }
+        else
+        {
+            var startDate = paidAt.Date;
+            var endDate = startDate.AddMonths(1);
+            dbContext.Subscriptions.Add(new Subscription
+            {
+                UserId = userId,
+                PricingPlanId = planId,
+                StartDate = startDate,
+                EndDate = endDate,
+                Status = SubscriptionStatus.Active,
+                InvoiceId = invoice.Id
+            });
+        }
     }
 
     public async Task CancelOtherPendingPaymentsForUser(Guid paidInvoiceId, CancellationToken cancellationToken = default)

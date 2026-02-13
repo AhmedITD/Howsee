@@ -19,6 +19,8 @@ public class HowseeDbContext : DbContext, IHowseeDbContext
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Property> Properties { get; set; }
+    public DbSet<PricingPlan> PricingPlans { get; set; }
+    public DbSet<Subscription> Subscriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

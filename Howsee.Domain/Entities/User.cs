@@ -20,6 +20,7 @@ public class User : BaseEntity, IAuditable, ISoftDeletable
 
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
+    public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
     public ICollection<Tour> Tours { get; set; } = new List<Tour>();
     public ICollection<Property> Properties { get; set; } = new List<Property>();
 }
