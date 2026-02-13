@@ -13,4 +13,5 @@ public static class ErrorCodes
     public const string PaymentCancellationFailed = "PAYMENT_CANCELLATION_FAILED";
     public const string InvalidWebhookSignature = "INVALID_WEBHOOK_SIGNATURE";
     public const string InternalError = "INTERNAL_ERROR";
+    public const string InvoiceNotFound = "INVOICE_NOT_FOUND";
 }

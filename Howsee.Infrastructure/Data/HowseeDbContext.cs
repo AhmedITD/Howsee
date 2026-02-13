@@ -16,9 +16,12 @@ public class HowseeDbContext : DbContext, IHowseeDbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<PhoneVerificationCode> PhoneVerificationCodes { get; set; }
+    public DbSet<Invoice> Invoices { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(HowseeDbContext).Assembly);
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (!typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType)) continue;

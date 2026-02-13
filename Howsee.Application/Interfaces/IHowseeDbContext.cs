@@ -9,6 +9,7 @@ public interface IHowseeDbContext
     DbSet<RefreshToken> RefreshTokens { get; set; }
     DbSet<AuditLog> AuditLogs { get; set; }
     DbSet<PhoneVerificationCode> PhoneVerificationCodes { get; set; }
+    DbSet<Invoice> Invoices { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     int SaveChanges();

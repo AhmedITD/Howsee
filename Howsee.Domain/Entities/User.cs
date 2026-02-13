@@ -20,4 +20,5 @@ public class User : BaseEntity, IAuditable, ISoftDeletable
     public DateTime? DeletedAt { get; set; }
 
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 }
