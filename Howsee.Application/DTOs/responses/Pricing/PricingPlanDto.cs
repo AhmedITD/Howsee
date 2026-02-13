@@ -8,4 +8,6 @@ public class PricingPlanDto
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "IQD";
     public string Unit { get; set; } = null!;
+    public bool IsActive { get; set; }
+    public int SortOrder { get; set; }
 }
