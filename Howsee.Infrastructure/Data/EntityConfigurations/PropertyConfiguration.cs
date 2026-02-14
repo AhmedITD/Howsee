@@ -15,6 +15,7 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
         builder.Property(x => x.Category).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(2000);
         builder.Property(x => x.Area).HasPrecision(18, 2);
+        builder.Property(x => x.Price).HasPrecision(18, 2);
         builder.Property(x => x.Active).IsRequired();
 
         builder.OwnsOne(x => x.Address, a =>

@@ -9,6 +9,7 @@ public class UpdatePropertyRequest
     public double? Lng { get; set; }
     public string? Description { get; set; }
     public decimal? Area { get; set; }
+    public decimal? Price { get; set; }
     public bool? Active { get; set; }
     public int? TourId { get; set; }
     /// <summary>When true, clear the linked tour (TourId = null).</summary>

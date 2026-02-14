@@ -33,12 +33,12 @@ public class AuthController(IAuthService authService, IValidator<RegisterRequest
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
-    [HttpPost("refresh")]
-    public async Task<ActionResult<LoginResponse>> Refresh([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken = default)
-    {
-        var result = await authService.Refresh(request, cancellationToken);
-        return result.Success ? Ok(result) : BadRequest(result);
-    }
+    // [HttpPost("refresh")]
+    // public async Task<ActionResult<LoginResponse>> Refresh([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken = default)
+    // {
+    //     var result = await authService.Refresh(request, cancellationToken);
+    //     return result.Success ? Ok(result) : BadRequest(result);
+    // }
 
     [HttpPost("logout")]
     public async Task<ActionResult<ApiResponse<object>>> Logout([FromBody] LogoutRequest request, CancellationToken cancellationToken = default)

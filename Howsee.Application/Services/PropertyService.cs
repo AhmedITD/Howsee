@@ -29,6 +29,7 @@ public class PropertyService(IHowseeDbContext dbContext) : IPropertyService
             Lng = request.Lng,
             Description = request.Description,
             Area = request.Area,
+            Price = request.Price,
             Active = request.Active,
             TourId = request.TourId,
             Address = new PropertyAddress
@@ -66,6 +67,7 @@ public class PropertyService(IHowseeDbContext dbContext) : IPropertyService
         if (request.Lng.HasValue) property.Lng = request.Lng;
         if (request.Description != null) property.Description = request.Description;
         if (request.Area.HasValue) property.Area = request.Area;
+        if (request.Price.HasValue) property.Price = request.Price;
         if (request.Active.HasValue) property.Active = request.Active.Value;
         if (request.ClearTourId == true) property.TourId = null;
         else if (request.TourId.HasValue) property.TourId = request.TourId;
@@ -126,6 +128,7 @@ public class PropertyService(IHowseeDbContext dbContext) : IPropertyService
             Lng = p.Lng,
             Description = p.Description,
             Area = p.Area,
+            Price = p.Price,
             Active = p.Active,
             TourId = p.TourId,
             TourTitle = p.Tour?.Title,

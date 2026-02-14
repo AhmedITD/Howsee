@@ -12,6 +12,7 @@ public class Property : BaseEntity, IAuditable
     public double? Lng { get; set; }
     public string? Description { get; set; }
     public decimal? Area { get; set; }
+    public decimal? Price { get; set; }
     public bool Active { get; set; } = true;
     public int? TourId { get; set; }
     public PropertyAddress Address { get; set; } = new();
