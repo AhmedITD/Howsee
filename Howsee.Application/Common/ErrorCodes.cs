@@ -25,4 +25,5 @@ public static class ErrorCodes
     public const string InvalidOrInactivePlan = "INVALID_OR_INACTIVE_PLAN";
     public const string PricingPlanNotFound = "PRICING_PLAN_NOT_FOUND";
     public const string PricingPlanKeyExists = "PRICING_PLAN_KEY_EXISTS";
+    public const string UserNotFound = "USER_NOT_FOUND";
 }

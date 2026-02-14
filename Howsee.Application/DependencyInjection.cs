@@ -9,6 +9,7 @@ using Howsee.Application.Interfaces.Pricing;
 using Howsee.Application.Interfaces.Properties;
 using Howsee.Application.Interfaces.Subscriptions;
 using Howsee.Application.Interfaces.Tours;
+using Howsee.Application.Interfaces.Users;
 using Howsee.Application.Services;
 
 namespace Howsee.Application;
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionService, SubscriptionService>();
         services.AddScoped<ITourService, TourService>();
         services.AddScoped<IPropertyService, PropertyService>();
+        services.AddScoped<IUserManagementService, UserManagementService>();
 
         TypeAdapterConfig.GlobalSettings.Scan(typeof(DependencyInjection).Assembly);
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
