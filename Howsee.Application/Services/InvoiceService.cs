@@ -100,10 +100,20 @@ public class InvoiceService(
         invoice.Status = InvoiceStatus.Paid;
         invoice.PaidAt = DateTime.UtcNow;
 
-        if (invoice.PricingPlanId.HasValue && invoice.PricingPlan != null &&
-            string.Equals(invoice.PricingPlan.Unit, "month", StringComparison.OrdinalIgnoreCase))
+        if (invoice.PricingPlanId.HasValue && invoice.PricingPlan != null)
         {
-            await CreateOrExtendSubscriptionAsync(invoice, cancellationToken);
+            if (string.Equals(invoice.PricingPlan.Unit, "month", StringComparison.OrdinalIgnoreCase))
+                await CreateOrExtendSubscriptionAsync(invoice, cancellationToken);
+
+            if (invoice.PricingPlan.Role.HasValue)
+            {
+                var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == invoice.UserId, cancellationToken);
+                if (user != null)
+                {
+                    user.Role = invoice.PricingPlan.Role.Value;
+                    user.UpdatedAt = DateTime.UtcNow;
+                }
+            }
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

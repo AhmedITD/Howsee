@@ -86,6 +86,7 @@ builder.Services.AddDbContext<HowseeDbContext>((sp, options) =>
         .AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>());
 });
 builder.Services.AddScoped<IHowseeDbContext, HowseeDbContext>();
+builder.Services.AddScoped<DatabaseSeeder>();
 
 builder.Services.AddApplicationServices();
 
@@ -161,6 +162,19 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Database seeding failed.");
+    }
+}
 
 app.UseCors();
 

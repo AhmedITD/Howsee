@@ -1,3 +1,5 @@
+using Howsee.Domain.Enums;
+
 namespace Howsee.Domain.Entities;
 
 public class PricingPlan
@@ -9,6 +11,8 @@ public class PricingPlan
     public string Currency { get; set; } = "IQD";
     /// <summary>Billing unit: "month" or "tour".</summary>
     public required string Unit { get; set; }
+    /// <summary>When set, paying for this plan assigns this role to the user.</summary>
+    public UserRole? Role { get; set; }
     public bool IsActive { get; set; } = true;
     public int SortOrder { get; set; }
 

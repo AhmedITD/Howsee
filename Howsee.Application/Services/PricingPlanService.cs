@@ -25,6 +25,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
                 Amount = p.Amount,
                 Currency = p.Currency,
                 Unit = p.Unit,
+                Role = p.Role,
                 IsActive = p.IsActive,
                 SortOrder = p.SortOrder
             })
@@ -47,6 +48,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
                 Amount = p.Amount,
                 Currency = p.Currency,
                 Unit = p.Unit,
+                Role = p.Role,
                 IsActive = p.IsActive,
                 SortOrder = p.SortOrder
             })
@@ -69,6 +71,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
                 Amount = p.Amount,
                 Currency = p.Currency,
                 Unit = p.Unit,
+                Role = p.Role,
                 IsActive = p.IsActive,
                 SortOrder = p.SortOrder
             })
@@ -88,6 +91,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
                 Amount = p.Amount,
                 Currency = p.Currency,
                 Unit = p.Unit,
+                Role = p.Role,
                 IsActive = p.IsActive,
                 SortOrder = p.SortOrder
             })
@@ -107,6 +111,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
             Amount = request.Amount,
             Currency = request.Currency ?? "IQD",
             Unit = request.Unit,
+            Role = request.Role,
             IsActive = request.IsActive,
             SortOrder = request.SortOrder
         };
@@ -127,6 +132,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
         if (request.Amount.HasValue) plan.Amount = request.Amount.Value;
         if (request.Currency != null) plan.Currency = request.Currency;
         if (request.Unit != null) plan.Unit = request.Unit;
+        if (request.Role.HasValue) plan.Role = request.Role;
         if (request.IsActive.HasValue) plan.IsActive = request.IsActive.Value;
         if (request.SortOrder.HasValue) plan.SortOrder = request.SortOrder.Value;
 

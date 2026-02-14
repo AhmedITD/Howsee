@@ -16,6 +16,7 @@ public class PricingPlanConfiguration : IEntityTypeConfiguration<PricingPlan>
         builder.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.Currency).IsRequired().HasMaxLength(3);
         builder.Property(x => x.Unit).IsRequired().HasMaxLength(20);
+        builder.Property(x => x.Role);
         builder.Property(x => x.IsActive).IsRequired();
         builder.Property(x => x.SortOrder).IsRequired();
 
