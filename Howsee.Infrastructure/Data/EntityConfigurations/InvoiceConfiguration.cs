@@ -13,15 +13,20 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 
         builder.Property(x => x.UserId).IsRequired();
         builder.Property(x => x.TotalAmount).HasPrecision(18, 2).IsRequired();
-        builder.Property(x => x.Currency).IsRequired().HasMaxLength(3);
+        builder.Property(x => x.CurrencyId).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(500);
         builder.Property(x => x.Status).IsRequired();
-        builder.Property(x => x.QiPaymentId).HasMaxLength(100);
+        builder.Property(x => x.WaylPaymentId).HasMaxLength(100);
         builder.Property(x => x.PricingPlanId);
 
         builder.HasOne(x => x.User)
             .WithMany(u => u.Invoices)
             .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Currency)
+            .WithMany(c => c.Invoices)
+            .HasForeignKey(x => x.CurrencyId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.PricingPlan)

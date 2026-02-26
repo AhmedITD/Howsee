@@ -98,7 +98,7 @@ builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 builder.Services.AddHttpClient<IOtpiqService, OtpiqService>();
-builder.Services.AddHttpClient<IQiCardService, QiCardService>();
+builder.Services.AddHttpClient<IWaylPaymentService, WaylPaymentService>();
 
 builder.Services.Configure<Howsee.Infrastructure.Services.MatterportApiOptions>(
     builder.Configuration.GetSection(Howsee.Infrastructure.Services.MatterportApiOptions.SectionName));

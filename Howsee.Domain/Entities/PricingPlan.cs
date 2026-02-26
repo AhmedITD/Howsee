@@ -8,7 +8,7 @@ public class PricingPlan
     public required string Key { get; set; }
     public string? Name { get; set; }
     public decimal Amount { get; set; }
-    public string Currency { get; set; } = "IQD";
+    public int CurrencyId { get; set; }
     /// <summary>Billing unit: "month" or "tour".</summary>
     public required string Unit { get; set; }
     /// <summary>When set, paying for this plan assigns this role to the user.</summary>
@@ -16,6 +16,7 @@ public class PricingPlan
     public bool IsActive { get; set; } = true;
     public int SortOrder { get; set; }
 
+    public Currency Currency { get; set; } = null!;
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 }

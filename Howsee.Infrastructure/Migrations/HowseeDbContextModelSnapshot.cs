@@ -55,6 +55,66 @@ namespace Howsee.Infrastructure.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("Howsee.Domain.Entities.Currency", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Symbol")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Currencies", (string)null);
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.Image", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AltText")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Images", (string)null);
+                });
+
             modelBuilder.Entity("Howsee.Domain.Entities.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -64,10 +124,8 @@ namespace Howsee.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                    b.Property<int>("CurrencyId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -87,10 +145,6 @@ namespace Howsee.Infrastructure.Migrations
                     b.Property<int?>("PricingPlanId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("QiPaymentId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -107,7 +161,14 @@ namespace Howsee.Infrastructure.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("WaylPaymentId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CurrencyId")
+                        .HasFilter("\"IsDeleted\" = false");
 
                     b.HasIndex("PricingPlanId")
                         .HasFilter("\"IsDeleted\" = false");
@@ -127,7 +188,9 @@ namespace Howsee.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CodeHash")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
@@ -146,7 +209,13 @@ namespace Howsee.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("Purpose")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UsedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("VerifiedAt")
@@ -169,10 +238,8 @@ namespace Howsee.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                    b.Property<int>("CurrencyId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -198,6 +265,8 @@ namespace Howsee.Infrastructure.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("Key")
                         .IsUnique();
@@ -263,6 +332,128 @@ namespace Howsee.Infrastructure.Migrations
                     b.ToTable("Properties", (string)null);
                 });
 
+            modelBuilder.Entity("Howsee.Domain.Entities.PropertyCategoryLookup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PropertyCategories", (string)null);
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.PropertyImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AltText")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("PropertyImages", (string)null);
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.PropertyImageVariant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<long?>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PropertyImageId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Resolution")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyImageId", "Resolution")
+                        .IsUnique()
+                        .HasDatabaseName("uniq_property_image_id_resolution");
+
+                    b.ToTable("PropertyImageVariants", (string)null);
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.PropertyListing", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CurrencyId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ListingType")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("PropertyListings", (string)null);
+                });
+
             modelBuilder.Entity("Howsee.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -299,6 +490,93 @@ namespace Howsee.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.RentOffer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CurrencyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("OfferedPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("ProposedEndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ProposedStartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ReviewedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("ListingId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("RentOffers", (string)null);
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.Save", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
+
+                    b.HasIndex("UserId", "PropertyId")
+                        .IsUnique()
+                        .HasDatabaseName("uniq_user_id_property_id");
+
+                    b.ToTable("Saves", (string)null);
                 });
 
             modelBuilder.Entity("Howsee.Domain.Entities.Subscription", b =>
@@ -416,6 +694,9 @@ namespace Howsee.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -429,6 +710,9 @@ namespace Howsee.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("ProfileImageId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Role")
                         .HasColumnType("integer");
 
@@ -440,11 +724,20 @@ namespace Howsee.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProfileImageId")
+                        .HasFilter("\"IsDeleted\" = false");
+
                     b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Howsee.Domain.Entities.Invoice", b =>
                 {
+                    b.HasOne("Howsee.Domain.Entities.Currency", "Currency")
+                        .WithMany("Invoices")
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Howsee.Domain.Entities.PricingPlan", "PricingPlan")
                         .WithMany("Invoices")
                         .HasForeignKey("PricingPlanId")
@@ -456,9 +749,22 @@ namespace Howsee.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Currency");
+
                     b.Navigation("PricingPlan");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.PricingPlan", b =>
+                {
+                    b.HasOne("Howsee.Domain.Entities.Currency", "Currency")
+                        .WithMany("PricingPlans")
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Currency");
                 });
 
             modelBuilder.Entity("Howsee.Domain.Entities.Property", b =>
@@ -515,6 +821,47 @@ namespace Howsee.Infrastructure.Migrations
                     b.Navigation("Tour");
                 });
 
+            modelBuilder.Entity("Howsee.Domain.Entities.PropertyImage", b =>
+                {
+                    b.HasOne("Howsee.Domain.Entities.Property", "Property")
+                        .WithMany("PropertyImages")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.PropertyImageVariant", b =>
+                {
+                    b.HasOne("Howsee.Domain.Entities.PropertyImage", "PropertyImage")
+                        .WithMany("Variants")
+                        .HasForeignKey("PropertyImageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PropertyImage");
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.PropertyListing", b =>
+                {
+                    b.HasOne("Howsee.Domain.Entities.Currency", "Currency")
+                        .WithMany("PropertyListings")
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Howsee.Domain.Entities.Property", "Property")
+                        .WithMany("Listings")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("Property");
+                });
+
             modelBuilder.Entity("Howsee.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("Howsee.Domain.Entities.User", "User")
@@ -522,6 +869,52 @@ namespace Howsee.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.RentOffer", b =>
+                {
+                    b.HasOne("Howsee.Domain.Entities.Currency", "Currency")
+                        .WithMany("RentOffers")
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Howsee.Domain.Entities.PropertyListing", "Listing")
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Howsee.Domain.Entities.User", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.Save", b =>
+                {
+                    b.HasOne("Howsee.Domain.Entities.Property", "Property")
+                        .WithMany("Saves")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Howsee.Domain.Entities.User", "User")
+                        .WithMany("Saves")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Property");
 
                     b.Navigation("User");
                 });
@@ -563,6 +956,26 @@ namespace Howsee.Infrastructure.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("Howsee.Domain.Entities.User", b =>
+                {
+                    b.HasOne("Howsee.Domain.Entities.Image", "ProfileImage")
+                        .WithMany()
+                        .HasForeignKey("ProfileImageId");
+
+                    b.Navigation("ProfileImage");
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.Currency", b =>
+                {
+                    b.Navigation("Invoices");
+
+                    b.Navigation("PricingPlans");
+
+                    b.Navigation("PropertyListings");
+
+                    b.Navigation("RentOffers");
+                });
+
             modelBuilder.Entity("Howsee.Domain.Entities.Invoice", b =>
                 {
                     b.Navigation("Subscription");
@@ -575,6 +988,20 @@ namespace Howsee.Infrastructure.Migrations
                     b.Navigation("Subscriptions");
                 });
 
+            modelBuilder.Entity("Howsee.Domain.Entities.Property", b =>
+                {
+                    b.Navigation("Listings");
+
+                    b.Navigation("PropertyImages");
+
+                    b.Navigation("Saves");
+                });
+
+            modelBuilder.Entity("Howsee.Domain.Entities.PropertyImage", b =>
+                {
+                    b.Navigation("Variants");
+                });
+
             modelBuilder.Entity("Howsee.Domain.Entities.User", b =>
                 {
                     b.Navigation("Invoices");
@@ -582,6 +1009,8 @@ namespace Howsee.Infrastructure.Migrations
                     b.Navigation("Properties");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("Saves");
 
                     b.Navigation("Subscriptions");
 

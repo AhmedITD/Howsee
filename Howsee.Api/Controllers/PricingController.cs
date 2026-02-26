@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Howsee.Api.Common;
+using Howsee.Application.Common;
 using Howsee.Application.DTOs.requests.Pricing;
 using Howsee.Application.DTOs.responses.Common;
 using Howsee.Application.DTOs.responses.Pricing;
-using Howsee.Application.Common;
 using Howsee.Application.Interfaces.Auth;
 using Howsee.Application.Interfaces.Pricing;
 using Howsee.Application.Interfaces.Subscriptions;
@@ -22,11 +22,9 @@ public class PricingController(IPricingPlanService pricingPlanService) : BaseCon
         [FromQuery] bool includeInactive = false,
         CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<PricingPlanDto> plans;
-        if (includeInactive && User.IsInRole(UserRole.Administrator.ToStringValue()))
-            plans = await pricingPlanService.GetAllPlansAsync(includeInactive: true, cancellationToken);
-        else
-            plans = await pricingPlanService.GetActivePlansAsync(cancellationToken);
+        var plans = includeInactive && User.IsInRole(UserRole.Administrator.ToStringValue())
+            ? await pricingPlanService.GetAllPlansAsync(includeInactive: true, cancellationToken)
+            : await pricingPlanService.GetActivePlansAsync(cancellationToken);
         return Ok(ApiResponse<List<PricingPlanDto>>.SuccessResponse(plans.ToList()));
     }
 
@@ -34,7 +32,9 @@ public class PricingController(IPricingPlanService pricingPlanService) : BaseCon
     public async Task<ActionResult<ApiResponse<PricingPlanDto>>> GetById(int id, CancellationToken cancellationToken = default)
     {
         var plan = await pricingPlanService.GetByIdAsync(id, cancellationToken);
-        return plan == null ? NotFound(ApiResponse<PricingPlanDto>.ErrorResponse("Pricing plan not found.", code: ErrorCodes.PricingPlanNotFound)) : Ok(ApiResponse<PricingPlanDto>.SuccessResponse(plan));
+        return plan == null
+            ? NotFound(ApiResponse<PricingPlanDto>.ErrorResponse("Pricing plan not found.", code: ErrorCodes.PricingPlanNotFound))
+            : Ok(ApiResponse<PricingPlanDto>.SuccessResponse(plan));
     }
 
     [Authorize(Policy = nameof(UserRole.Administrator))]
@@ -64,17 +64,13 @@ public class PricingController(IPricingPlanService pricingPlanService) : BaseCon
 
 [ApiController]
 [Route("api/subscription")]
-public class SubscriptionController(
-    ISubscriptionService subscriptionService,
-    ICurrentUser currentUser) : BaseController
+public class SubscriptionController(ISubscriptionService subscriptionService, ICurrentUser currentUser) : BaseController
 {
     [Authorize]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<SubscriptionDto?>>> GetCurrent(CancellationToken cancellationToken = default)
     {
-        var userId = currentUser.Id;
-        if (userId == 0) return Unauthorized();
-        var subscription = await subscriptionService.GetCurrentSubscriptionAsync(userId, cancellationToken);
+        var subscription = await subscriptionService.GetCurrentSubscriptionAsync(currentUser.Id, cancellationToken);
         return Ok(ApiResponse<SubscriptionDto?>.SuccessResponse(subscription));
     }
 }

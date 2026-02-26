@@ -15,6 +15,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
     {
         return await dbContext.PricingPlans
             .AsNoTracking()
+            .Include(p => p.Currency)
             .Where(p => p.IsActive)
             .OrderBy(p => p.SortOrder)
             .Select(p => new PricingPlanDto
@@ -23,7 +24,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
                 Key = p.Key,
                 Name = p.Name,
                 Amount = p.Amount,
-                Currency = p.Currency,
+                Currency = p.Currency.Code,
                 Unit = p.Unit,
                 Role = p.Role,
                 IsActive = p.IsActive,
@@ -34,9 +35,8 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
 
     public async Task<IReadOnlyList<PricingPlanDto>> GetAllPlansAsync(bool includeInactive, CancellationToken cancellationToken = default)
     {
-        var query = dbContext.PricingPlans.AsNoTracking();
-        if (!includeInactive)
-            query = query.Where(p => p.IsActive);
+        var query = dbContext.PricingPlans.AsNoTracking().Include(p => p.Currency)
+            .Where(p => includeInactive || p.IsActive);
         return await query
             .OrderBy(p => p.SortOrder)
             .ThenBy(p => p.Id)
@@ -46,7 +46,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
                 Key = p.Key,
                 Name = p.Name,
                 Amount = p.Amount,
-                Currency = p.Currency,
+                Currency = p.Currency.Code,
                 Unit = p.Unit,
                 Role = p.Role,
                 IsActive = p.IsActive,
@@ -62,6 +62,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
 
         return await dbContext.PricingPlans
             .AsNoTracking()
+            .Include(p => p.Currency)
             .Where(p => p.Key == key && p.IsActive)
             .Select(p => new PricingPlanDto
             {
@@ -69,7 +70,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
                 Key = p.Key,
                 Name = p.Name,
                 Amount = p.Amount,
-                Currency = p.Currency,
+                Currency = p.Currency.Code,
                 Unit = p.Unit,
                 Role = p.Role,
                 IsActive = p.IsActive,
@@ -82,6 +83,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
     {
         return await dbContext.PricingPlans
             .AsNoTracking()
+            .Include(p => p.Currency)
             .Where(p => p.Id == id)
             .Select(p => new PricingPlanDto
             {
@@ -89,7 +91,7 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
                 Key = p.Key,
                 Name = p.Name,
                 Amount = p.Amount,
-                Currency = p.Currency,
+                Currency = p.Currency.Code,
                 Unit = p.Unit,
                 Role = p.Role,
                 IsActive = p.IsActive,
@@ -104,12 +106,17 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
         if (exists)
             return ApiResponse<PricingPlanDto>.ErrorResponse("A plan with this key already exists.", code: ErrorCodes.PricingPlanKeyExists);
 
+        var currencyCode = request.Currency ?? "IQD";
+        var currency = await dbContext.Currencies.FirstOrDefaultAsync(c => c.Code == currencyCode, cancellationToken);
+        if (currency == null)
+            return ApiResponse<PricingPlanDto>.ErrorResponse($"Currency '{currencyCode}' not found. Seed Currencies first.", code: ErrorCodes.ResourceNotFound);
+
         var plan = new PricingPlan
         {
             Key = request.Key,
             Name = request.Name,
             Amount = request.Amount,
-            Currency = request.Currency ?? "IQD",
+            CurrencyId = currency.Id,
             Unit = request.Unit,
             Role = request.Role,
             IsActive = request.IsActive,
@@ -130,7 +137,11 @@ public class PricingPlanService(IHowseeDbContext dbContext) : IPricingPlanServic
 
         if (request.Name != null) plan.Name = request.Name;
         if (request.Amount.HasValue) plan.Amount = request.Amount.Value;
-        if (request.Currency != null) plan.Currency = request.Currency;
+        if (request.Currency != null)
+        {
+            var currency = await dbContext.Currencies.FirstOrDefaultAsync(c => c.Code == request.Currency, cancellationToken);
+            if (currency != null) plan.CurrencyId = currency.Id;
+        }
         if (request.Unit != null) plan.Unit = request.Unit;
         if (request.Role.HasValue) plan.Role = request.Role;
         if (request.IsActive.HasValue) plan.IsActive = request.IsActive.Value;

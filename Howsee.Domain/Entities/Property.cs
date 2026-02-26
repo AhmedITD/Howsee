@@ -21,4 +21,7 @@ public class Property : BaseEntity, IAuditable
 
     public User Owner { get; set; } = null!;
     public Tour? Tour { get; set; }
+    public ICollection<PropertyListing> Listings { get; set; } = new List<PropertyListing>();
+    public ICollection<PropertyImage> PropertyImages { get; set; } = new List<PropertyImage>();
+    public ICollection<Save> Saves { get; set; } = new List<Save>();
 }

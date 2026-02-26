@@ -12,6 +12,7 @@ public class HowseeDbContext : DbContext, IHowseeDbContext
     {
     }
 
+    public DbSet<Currency> Currencies { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
@@ -21,6 +22,13 @@ public class HowseeDbContext : DbContext, IHowseeDbContext
     public DbSet<Property> Properties { get; set; }
     public DbSet<PricingPlan> PricingPlans { get; set; }
     public DbSet<Subscription> Subscriptions { get; set; }
+    public DbSet<Image> Images { get; set; }
+    public DbSet<PropertyListing> PropertyListings { get; set; }
+    public DbSet<RentOffer> RentOffers { get; set; }
+    public DbSet<Save> Saves { get; set; }
+    public DbSet<PropertyCategoryLookup> PropertyCategories { get; set; }
+    public DbSet<PropertyImage> PropertyImages { get; set; }
+    public DbSet<PropertyImageVariant> PropertyImageVariants { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -22,9 +22,7 @@ public class PropertyController(IPropertyService propertyService, ICurrentUser c
         [FromQuery] int? tourId,
         CancellationToken cancellationToken = default)
     {
-        var userId = currentUser.Id;
-        if (userId == 0) return Unauthorized();
-        var result = await propertyService.List(userId, active, category, tourId, cancellationToken);
+        var result = await propertyService.List(currentUser.Id, active, category, tourId, cancellationToken);
         return Ok(result);
     }
 
@@ -32,9 +30,7 @@ public class PropertyController(IPropertyService propertyService, ICurrentUser c
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ApiResponse<PropertyResponse>>> Get(int id, CancellationToken cancellationToken = default)
     {
-        var userId = currentUser.Id;
-        if (userId == 0) return Unauthorized();
-        var result = await propertyService.Get(id, userId, cancellationToken);
+        var result = await propertyService.Get(id, currentUser.Id, cancellationToken);
         return result.Data != null ? Ok(result) : NotFound(result);
     }
 
@@ -42,9 +38,7 @@ public class PropertyController(IPropertyService propertyService, ICurrentUser c
     [HttpPost]
     public async Task<ActionResult<ApiResponse<PropertyResponse>>> Create([FromBody] CreatePropertyRequest request, CancellationToken cancellationToken = default)
     {
-        var userId = currentUser.Id;
-        if (userId == 0) return Unauthorized();
-        var result = await propertyService.Create(request, userId, cancellationToken);
+        var result = await propertyService.Create(request, currentUser.Id, cancellationToken);
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
@@ -52,9 +46,7 @@ public class PropertyController(IPropertyService propertyService, ICurrentUser c
     [HttpPut("{id:int}")]
     public async Task<ActionResult<ApiResponse<PropertyResponse>>> Update(int id, [FromBody] UpdatePropertyRequest request, CancellationToken cancellationToken = default)
     {
-        var userId = currentUser.Id;
-        if (userId == 0) return Unauthorized();
-        var result = await propertyService.Update(id, request, userId, cancellationToken);
+        var result = await propertyService.Update(id, request, currentUser.Id, cancellationToken);
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
@@ -62,9 +54,7 @@ public class PropertyController(IPropertyService propertyService, ICurrentUser c
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id, CancellationToken cancellationToken = default)
     {
-        var userId = currentUser.Id;
-        if (userId == 0) return Unauthorized();
-        var result = await propertyService.Delete(id, userId, cancellationToken);
+        var result = await propertyService.Delete(id, currentUser.Id, cancellationToken);
         return result.Success ? Ok(result) : NotFound(result);
     }
 }

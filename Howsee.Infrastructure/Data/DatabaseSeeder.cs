@@ -31,12 +31,36 @@ public class DatabaseSeeder
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
+        await SeedCurrenciesAsync(cancellationToken);
         await SeedPricingPlansAsync(cancellationToken);
         await SeedAdminUserAsync(cancellationToken);
     }
 
+    private async Task SeedCurrenciesAsync(CancellationToken cancellationToken)
+    {
+        var iqd = await _db.Currencies.FirstOrDefaultAsync(c => c.Code == "IQD", cancellationToken);
+        if (iqd != null) return;
+
+        _db.Currencies.Add(new Currency
+        {
+            Code = "IQD",
+            Name = "Iraqi Dinar",
+            Symbol = "ع.د",
+            IsActive = true
+        });
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Seeded currency: IQD");
+    }
+
     private async Task SeedPricingPlansAsync(CancellationToken cancellationToken)
     {
+        var iqd = await _db.Currencies.FirstOrDefaultAsync(c => c.Code == "IQD", cancellationToken);
+        if (iqd == null)
+        {
+            _logger.LogWarning("Currency IQD not found; skipping pricing plan seed.");
+            return;
+        }
+
         var planDefaults = new (string Key, string Name, decimal Amount, string Unit, UserRole? Role)[]
         {
             ("Price_Basic", "Basic", 50_000m, "month", UserRole.Buyer),
@@ -64,7 +88,7 @@ public class DatabaseSeeder
                 Key = key,
                 Name = name,
                 Amount = amount,
-                Currency = "IQD",
+                CurrencyId = iqd.Id,
                 Unit = unit,
                 Role = role,
                 IsActive = true,

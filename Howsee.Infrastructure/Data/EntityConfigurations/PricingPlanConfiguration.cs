@@ -14,12 +14,17 @@ public class PricingPlanConfiguration : IEntityTypeConfiguration<PricingPlan>
         builder.Property(x => x.Key).IsRequired().HasMaxLength(100);
         builder.Property(x => x.Name).HasMaxLength(200);
         builder.Property(x => x.Amount).HasPrecision(18, 2).IsRequired();
-        builder.Property(x => x.Currency).IsRequired().HasMaxLength(3);
+        builder.Property(x => x.CurrencyId).IsRequired();
         builder.Property(x => x.Unit).IsRequired().HasMaxLength(20);
         builder.Property(x => x.Role);
         builder.Property(x => x.IsActive).IsRequired();
         builder.Property(x => x.SortOrder).IsRequired();
 
         builder.HasIndex(x => x.Key).IsUnique();
+
+        builder.HasOne(x => x.Currency)
+            .WithMany(c => c.PricingPlans)
+            .HasForeignKey(x => x.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

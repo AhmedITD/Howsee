@@ -9,7 +9,6 @@ using Howsee.Application.Interfaces;
 using Howsee.Application.Interfaces.Auth;
 using Howsee.Application.Interfaces.Invoices;
 using Howsee.Application.Interfaces.Payments;
-using Howsee.Application.Interfaces.Pricing;
 using Howsee.Domain.Entities;
 using Howsee.Domain.Enums;
 
@@ -18,13 +17,14 @@ namespace Howsee.Application.Services;
 public class InvoiceService(
     IHowseeDbContext dbContext,
     ICurrentUser currentUser,
-    IQiCardService qiCardService,
-    IConfiguration configuration,
-    IPricingPlanService pricingPlanService) : IInvoiceService
+    IWaylPaymentService waylPaymentService,
+    IConfiguration configuration) : IInvoiceService
 {
     public async Task<ApiResponse<InvoiceResponse>> CreateInvoice(InvoiceRequest request, CancellationToken cancellationToken = default)
     {
-        var plan = await pricingPlanService.GetByKeyAsync(request.PlanKey, cancellationToken);
+        var plan = await dbContext.PricingPlans
+            .Include(p => p.Currency)
+            .FirstOrDefaultAsync(p => p.Key == request.PlanKey && p.IsActive, cancellationToken);
         if (plan == null)
             return ApiResponse<InvoiceResponse>.ErrorResponse("Invalid or inactive plan.", code: ErrorCodes.InvalidOrInactivePlan);
 
@@ -33,7 +33,7 @@ public class InvoiceService(
             Id = Guid.NewGuid(),
             UserId = currentUser.Id,
             TotalAmount = plan.Amount,
-            Currency = plan.Currency,
+            CurrencyId = plan.CurrencyId,
             Description = request.Description ?? plan.Name,
             Status = InvoiceStatus.Draft,
             PricingPlanId = plan.Id
@@ -42,48 +42,32 @@ public class InvoiceService(
         dbContext.Invoices.Add(invoice);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var user = await dbContext.Users
-            .AsNoTracking()
-            .Where(u => u.Id == currentUser.Id)
-            .Select(u => new { u.FullName })
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var customerInfo = new CustomerInfo
-        {
-            FirstName = user?.FullName,
-            LastName = null,
-            Email = null
-        };
-
         var appUrl = configuration["APP_URL"];
-        var notificationUrl = string.IsNullOrEmpty(appUrl)
-            ? null
-            : $"{appUrl}/payments/webhook/qicard";
+        var webhookUrl = string.IsNullOrEmpty(appUrl) ? null : $"{appUrl}/api/payments/webhook/wayl";
+        var webhookSecret = configuration["Wayl:WebhookSecret"];
 
-        var qiCardPaymentRequest = new QiCardPaymentRequest
+        var waylRequest = new WaylCreateLinkRequest
         {
-            RequestId = invoice.Id.ToString(),
-            Amount = invoice.TotalAmount,
-            Currency = invoice.Currency,
-            FinishPaymentUrl = request.FinishUrl,
-            NotificationUrl = notificationUrl,
-            CustomerInfo = customerInfo,
-            BrowserInfo = request.BrowserInfo,
-            Description = invoice.Description
+            ReferenceId = invoice.Id.ToString(),
+            Total = invoice.TotalAmount,
+            Currency = plan.Currency.Code,
+            WebhookUrl = webhookUrl,
+            WebhookSecret = webhookSecret,
+            RedirectionUrl = request.FinishUrl
         };
 
-        var qiResponse = await qiCardService.InitiatePaymentAsync(qiCardPaymentRequest, cancellationToken);
+        var waylResponse = await waylPaymentService.CreateLinkAsync(waylRequest, cancellationToken);
 
-        if (!qiResponse.Success)
-            return ApiResponse<InvoiceResponse>.ErrorResponse(qiResponse.Error ?? "Payment initiation failed.", code: ErrorCodes.PaymentInitiationFailed);
+        if (!waylResponse.Success)
+            return ApiResponse<InvoiceResponse>.ErrorResponse(waylResponse.Error ?? "Payment link creation failed.", code: ErrorCodes.PaymentInitiationFailed);
 
-        invoice.QiPaymentId = qiResponse.PaymentId;
+        invoice.WaylPaymentId = waylResponse.LinkId;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return ApiResponse<InvoiceResponse>.SuccessResponse(new InvoiceResponse
         {
             InvoiceId = invoice.Id,
-            PaymentUrl = qiResponse.PaymentUrl ?? string.Empty
+            PaymentUrl = waylResponse.PaymentUrl ?? string.Empty
         });
     }
 
@@ -169,8 +153,8 @@ public class InvoiceService(
 
         foreach (var inv in otherPending)
         {
-            if (!string.IsNullOrWhiteSpace(inv.QiPaymentId))
-                _ = await qiCardService.CancelPaymentAsync(inv.QiPaymentId);
+            if (!string.IsNullOrWhiteSpace(inv.WaylPaymentId))
+                _ = await waylPaymentService.InvalidateLinkIfPendingAsync(inv.Id.ToString(), cancellationToken);
             inv.Status = InvoiceStatus.Cancelled;
         }
 

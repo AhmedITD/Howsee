@@ -29,10 +29,10 @@ public class AuthService(
             return ApiResponse<RegisterResponse>.ErrorResponse("Verification code is required.");
 
         var verification = await dbContext.PhoneVerificationCodes
-            .Where(v => v.PhoneNumber == phone && v.Code == request.VerificationCode && !v.IsUsed && v.ExpiresAt > DateTime.UtcNow)
+            .Where(v => v.PhoneNumber == phone && !v.IsUsed && v.ExpiresAt > DateTime.UtcNow)
             .OrderByDescending(v => v.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
-        if (verification == null)
+        if (verification == null || !VerifyOtpCode(request.VerificationCode, verification))
             return ApiResponse<RegisterResponse>.ErrorResponse("Invalid or expired verification code.", code: ErrorCodes.InvalidVerificationCode);
 
         if (await dbContext.Users.AnyAsync(u => u.Phone == phone, cancellationToken))
@@ -50,6 +50,7 @@ public class AuthService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         verification.IsUsed = true;
+        verification.UsedAt = DateTime.UtcNow;
         verification.VerifiedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -143,6 +144,8 @@ public class AuthService(
         {
             PhoneNumber = phone,
             Code = code,
+            CodeHash = passwordService.HashPassword(code),
+            Purpose = OtpPurpose.Registration,
             ExpiresAt = expiresAt,
             IpAddress = ipAddress,
             IsUsed = false
@@ -188,6 +191,8 @@ public class AuthService(
         {
             PhoneNumber = phone,
             Code = code,
+            CodeHash = passwordService.HashPassword(code),
+            Purpose = OtpPurpose.PasswordReset,
             ExpiresAt = expiresAt,
             IpAddress = ipAddress,
             IsUsed = false
@@ -223,11 +228,11 @@ public class AuthService(
             return ApiResponse<object>.ErrorResponse("New password is required.");
 
         var verificationCode = await dbContext.PhoneVerificationCodes
-            .Where(v => v.PhoneNumber == phone && v.Code == request.Code && !v.IsUsed && v.ExpiresAt > DateTime.UtcNow)
+            .Where(v => v.PhoneNumber == phone && !v.IsUsed && v.ExpiresAt > DateTime.UtcNow)
             .OrderByDescending(v => v.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (verificationCode == null)
+        if (verificationCode == null || !VerifyOtpCode(request.Code, verificationCode))
             return ApiResponse<object>.ErrorResponse("Invalid or expired verification code.");
 
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Phone == phone, cancellationToken);
@@ -237,6 +242,7 @@ public class AuthService(
         user.PasswordHash = passwordService.HashPassword(request.NewPassword);
         user.UpdatedAt = DateTime.UtcNow;
         verificationCode.IsUsed = true;
+        verificationCode.UsedAt = DateTime.UtcNow;
         verificationCode.VerifiedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -251,5 +257,12 @@ public class AuthService(
         if (user == null)
             return null;
         return passwordService.VerifyPassword(password, user.PasswordHash) ? user : null;
+    }
+
+    private bool VerifyOtpCode(string inputCode, PhoneVerificationCode verification)
+    {
+        if (verification.CodeHash != null)
+            return passwordService.VerifyPassword(inputCode, verification.CodeHash);
+        return verification.Code == inputCode;
     }
 }

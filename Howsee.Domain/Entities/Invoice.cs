@@ -8,10 +8,11 @@ public class Invoice : ISoftDeletable, IAuditable
     public Guid Id { get; set; }
     public int UserId { get; set; }
     public decimal TotalAmount { get; set; }
-    public string Currency { get; set; } = "IQD";
+    public int CurrencyId { get; set; }
     public string? Description { get; set; }
     public InvoiceStatus Status { get; set; } = InvoiceStatus.Draft;
-    public string? QiPaymentId { get; set; }
+    /// <summary>Wayl payment link id (wayl_payment_id in schema).</summary>
+    public string? WaylPaymentId { get; set; }
     public DateTime? PaidAt { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
@@ -22,6 +23,7 @@ public class Invoice : ISoftDeletable, IAuditable
     public int? PricingPlanId { get; set; }
 
     public User User { get; set; } = null!;
+    public Currency Currency { get; set; } = null!;
     public PricingPlan? PricingPlan { get; set; }
     public Subscription? Subscription { get; set; }
 }
