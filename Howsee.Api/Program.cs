@@ -167,6 +167,18 @@ using (var scope = app.Services.CreateScope())
 {
     try
     {
+        var db = scope.ServiceProvider.GetRequiredService<HowseeDbContext>();
+        await db.Database.ExecuteSqlRawAsync(@"
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'PricingPlans' AND column_name = 'Role'
+  ) THEN
+    ALTER TABLE ""PricingPlans"" ADD COLUMN ""Role"" integer NULL;
+  END IF;
+END $$;
+");
         await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedAsync();
     }
     catch (Exception ex)

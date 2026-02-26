@@ -50,12 +50,12 @@ public class InvoiceService(
 
         var customerInfo = new CustomerInfo
         {
-            FirstName = user?.FullName ?? "Customer",
+            FirstName = user?.FullName,
             LastName = null,
             Email = null
         };
 
-        var appUrl = configuration["APP_URL"]?.TrimEnd('/') ?? "";
+        var appUrl = configuration["APP_URL"];
         var notificationUrl = string.IsNullOrEmpty(appUrl)
             ? null
             : $"{appUrl}/payments/webhook/qicard";

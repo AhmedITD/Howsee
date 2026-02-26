@@ -1,0 +1,235 @@
+// ─── Enums ────────────────────────────────────────────────
+
+Enum user_role {
+  Administrator
+  Contractor
+  Agency
+  Buyer
+}
+
+Enum invoice_status {
+  draft
+  sent
+  paid
+  overdue
+  cancelled
+}
+
+Enum subscription_status {
+  Active
+  Cancelled
+  Expired
+}
+
+Enum listing_type {
+  Sale
+  Rent
+}
+
+Enum rent_offer_status {
+  Pending
+  Accepted
+  Rejected
+  Withdrawn
+  Expired
+}
+
+Enum otp_purpose {
+  Registration
+  PasswordReset
+}
+
+// ─── Tables ───────────────────────────────────────────────
+
+Table currencies {
+  id int [pk]
+  code varchar [not null, unique, note: 'ISO 4217 e.g. USD, EUR, IQD']
+  name varchar [not null, note: 'e.g. US Dollar']
+  symbol varchar [not null, note: 'e.g. $, €, ع.د']
+  is_active boolean [default: true]
+}
+
+Table images {
+  id int [pk]
+  url varchar [not null]
+  alt_text varchar
+  created_at timestamp
+  type varchar
+}
+
+Table otp_codes {
+  id int [pk]
+  phone varchar [not null]
+  code_hash varchar [not null, note: 'hashed OTP code']
+  purpose otp_purpose [not null]
+  expires_at timestamp [not null]
+  used_at timestamp [note: 'null if not yet used']
+  created_at timestamp
+}
+
+Table users {
+  id int [pk]
+  full_name varchar
+  phone varchar
+  password_hash varchar
+  role user_role
+  is_active boolean [default: true]
+  updated_by int
+  is_deleted boolean
+  deleted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+  profile_image_id int [ref: - images.id, note: 'optional']
+}
+
+Table refresh_tokens {
+  id uuid [pk]
+  token_hash varchar
+  user_id int [not null, ref: > users.id]
+  expires_at timestamp
+  created_at timestamp
+  revoked_at timestamp
+  device_client_id varchar
+  ip_address varchar
+  replaced_by_token_hash varchar
+}
+
+Table property_categories {
+  id int [pk]
+  name varchar [not null, note: 'House|Apartment|Office|Villa|Other']
+}
+
+Table tours {
+  id int [pk]
+  owner_id int [not null, ref: > users.id]
+  title varchar
+  matterport_model_id varchar
+  start_sweep_id varchar
+  password_hash varchar
+  expires_at timestamp
+  is_active boolean
+  share_token varchar
+  created_at timestamp
+  updated_at timestamp
+  updated_by int
+}
+
+Table properties {
+  id int [pk]
+  owner_id int [not null, ref: > users.id]
+  category_id int [not null, ref: > property_categories.id]
+  lat double
+  lng double
+  description text
+  area decimal
+  active boolean
+  tour_id int [ref: > tours.id, note: 'optional']
+  address text
+  locality varchar
+  administrative_area varchar
+  country_code varchar
+  postal_code varchar
+  created_at timestamp
+  updated_at timestamp
+  updated_by int
+}
+
+Table property_images {
+  id int [pk]
+  property_id int [not null, ref: > properties.id]
+  sort_order int
+  alt_text varchar
+  created_at timestamp
+}
+
+Table property_image_variants {
+  id int [pk]
+  property_image_id int [not null, ref: > property_images.id]
+  resolution varchar [not null, note: 'small|medium|large']
+  url varchar [not null]
+  width int
+  height int
+  file_size_bytes bigint
+
+  indexes {
+    (property_image_id, resolution) [unique, name: 'uniq_property_image_id_resolution']
+  }
+}
+
+Table property_listings {
+  id int [pk]
+  property_id int [not null, ref: - properties.id]
+  listing_type listing_type [not null]
+  price decimal [not null]
+  currency_id int [not null, ref: > currencies.id]
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table rent_offers {
+  id int [pk]
+  listing_id int [not null, ref: > property_listings.id]
+  tenant_id int [not null, ref: > users.id]
+  offered_price decimal [not null]
+  currency_id int [not null, ref: > currencies.id]
+  duration_minutes int [not null, note: 'total rental duration in minutes']
+  proposed_start_date timestamp [not null]
+  proposed_end_date timestamp [not null]
+  status rent_offer_status [not null]
+  message text [note: 'optional message from tenant']
+  reviewed_by int [ref: > users.id, note: 'owner or admin who reviewed']
+  reviewed_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table saves {
+  id int [pk]
+  user_id int [not null, ref: > users.id]
+  property_id int [not null, ref: > properties.id]
+  created_at timestamp
+
+  indexes {
+    (user_id, property_id) [unique, name: 'uniq_user_id_property_id']
+  }
+}
+
+Table pricing_plans {
+  id int [pk]
+  key varchar
+  name varchar
+  amount decimal
+  currency_id int [not null, ref: > currencies.id]
+  unit varchar [note: 'e.g. per_month, per_year — defines billing cycle']
+  role user_role
+  is_active boolean
+  sort_order int
+}
+
+Table invoices {
+  id uuid [pk]
+  user_id int [not null, ref: > users.id]
+  total_amount decimal
+  currency_id int [not null, ref: > currencies.id]
+  description text
+  status invoice_status
+  wayl_payment_id varchar [note: 'WAYL payment gateway transaction ID']
+  paid_at timestamp
+  is_deleted boolean
+  deleted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+  updated_by int
+  pricing_plan_id int [ref: > pricing_plans.id, note: 'optional']
+}
+
+Table subscriptions {
+  id int [pk]
+  user_id int [not null, ref: > users.id]
+  pricing_plan_id int [not null, ref: > pricing_plans.id]
+  start_date timestamp
+  end_date timestamp
+  status subscription_status
+  invoice_id uuid [ref: > invoices.id, note: 'optional']
+}

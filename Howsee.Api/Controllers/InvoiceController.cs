@@ -34,10 +34,10 @@ public class InvoiceController(IInvoiceService invoiceService) : BaseController
         var request = context.Request;
         return new BrowserInfo
         {
-            BrowserUserAgent = request.Headers["User-Agent"].FirstOrDefault() ?? "Mozilla/5.0",
-            BrowserAcceptHeader = request.Headers["Accept"].FirstOrDefault() ?? "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            BrowserLanguage = request.Headers["Accept-Language"].FirstOrDefault() ?? "en-US",
-            BrowserIp = request.Headers["X-Forwarded-For"].FirstOrDefault() ?? context.Connection.RemoteIpAddress?.ToString(),
+            BrowserUserAgent = request.Headers["User-Agent"].FirstOrDefault(),
+            BrowserAcceptHeader = request.Headers["Accept"].FirstOrDefault(),
+            BrowserLanguage = request.Headers["Accept-Language"].FirstOrDefault(),
+            BrowserIp = request.Headers["X-Forwarded-For"].FirstOrDefault(),
             BrowserJavaEnabled = false
         };
     }
