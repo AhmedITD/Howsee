@@ -93,7 +93,7 @@ public class PropertyService(IHowseeDbContext dbContext) : IPropertyService
         return ApiResponse<PropertyResponse>.SuccessResponse(ToResponse(property));
     }
 
-    public async Task<ApiResponse<List<PropertyResponse>>> List(int ownerId, bool? active = null, PropertyCategory? category = null, int? tourId = null, CancellationToken cancellationToken = default)
+    public async Task<ApiResponse<List<PropertyResponse>>> List(int ownerId, bool? active = null, Howsee.Domain.Enums.PropertyCategory? category = null, int? tourId = null, CancellationToken cancellationToken = default)
     {
         var query = dbContext.Properties
             .Include(p => p.Tour)

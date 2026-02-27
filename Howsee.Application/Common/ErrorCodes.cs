@@ -26,4 +26,8 @@ public static class ErrorCodes
     public const string PricingPlanNotFound = "PRICING_PLAN_NOT_FOUND";
     public const string PricingPlanKeyExists = "PRICING_PLAN_KEY_EXISTS";
     public const string UserNotFound = "USER_NOT_FOUND";
+    public const string CurrencyNotFound = "CURRENCY_NOT_FOUND";
+    public const string CurrencyCodeExists = "CURRENCY_CODE_EXISTS";
+    public const string PropertyCategoryNotFound = "PROPERTY_CATEGORY_NOT_FOUND";
+    public const string PropertyCategoryNameExists = "PROPERTY_CATEGORY_NAME_EXISTS";
 }

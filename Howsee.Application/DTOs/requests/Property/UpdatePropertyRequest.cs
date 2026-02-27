@@ -4,7 +4,7 @@ namespace Howsee.Application.DTOs.requests.Property;
 
 public class UpdatePropertyRequest
 {
-    public PropertyCategory? Category { get; set; }
+    public Howsee.Domain.Enums.PropertyCategory? Category { get; set; }
     public double? Lat { get; set; }
     public double? Lng { get; set; }
     public string? Description { get; set; }

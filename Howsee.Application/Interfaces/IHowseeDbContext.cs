@@ -5,7 +5,7 @@ namespace Howsee.Application.Interfaces;
 
 public interface IHowseeDbContext
 {
-    DbSet<Currency> Currencies { get; set; }
+    DbSet<Howsee.Domain.Entities.Currency> Currencies { get; set; }
     DbSet<User> Users { get; set; }
     DbSet<RefreshToken> RefreshTokens { get; set; }
     DbSet<AuditLog> AuditLogs { get; set; }
