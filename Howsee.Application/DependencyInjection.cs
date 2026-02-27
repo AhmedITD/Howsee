@@ -6,6 +6,7 @@ using Howsee.Application.Interfaces.Auth;
 using Howsee.Application.Interfaces.Currency;
 using Howsee.Application.Interfaces.Invoices;
 using Howsee.Application.Interfaces.Payments;
+using Howsee.Application.Interfaces.Listings;
 using Howsee.Application.Interfaces.Pricing;
 using Howsee.Application.Interfaces.PropertyCategory;
 using Howsee.Application.Interfaces.Properties;
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<ICurrencyService, CurrencyService>();
         services.AddScoped<IPropertyCategoryService, PropertyCategoryService>();
+        services.AddScoped<IListingService, ListingService>();
 
         TypeAdapterConfig.GlobalSettings.Scan(typeof(DependencyInjection).Assembly);
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);

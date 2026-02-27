@@ -108,6 +108,111 @@ public class PropertyService(IHowseeDbContext dbContext) : IPropertyService
         return ApiResponse<List<PropertyResponse>>.SuccessResponse(response);
     }
 
+    public async Task<IReadOnlyList<PropertySummaryForBuyerDto>> ListForBuyerAsync(ListingType? listingType = null, Howsee.Domain.Enums.PropertyCategory? category = null, int? currencyId = null, decimal? minPrice = null, decimal? maxPrice = null, CancellationToken cancellationToken = default)
+    {
+        var listingQuery = dbContext.PropertyListings
+            .AsNoTracking()
+            .Include(l => l.Property).ThenInclude(p => p!.Tour)
+            .Include(l => l.Currency)
+            .Where(l => l.IsActive && l.Property != null && l.Property.Active);
+
+        if (listingType.HasValue)
+            listingQuery = listingQuery.Where(l => l.ListingType == listingType.Value);
+        if (category.HasValue)
+            listingQuery = listingQuery.Where(l => l.Property!.Category == category.Value);
+        if (currencyId.HasValue)
+            listingQuery = listingQuery.Where(l => l.CurrencyId == currencyId.Value);
+        if (minPrice.HasValue)
+            listingQuery = listingQuery.Where(l => l.Price >= minPrice.Value);
+        if (maxPrice.HasValue)
+            listingQuery = listingQuery.Where(l => l.Price <= maxPrice.Value);
+
+        var listingRows = await listingQuery
+            .OrderByDescending(l => l.CreatedAt)
+            .Select(l => new
+            {
+                l.PropertyId,
+                l.Price,
+                CurrencyCode = l.Currency.Code,
+                CurrencySymbol = l.Currency.Symbol,
+                l.ListingType
+            })
+            .ToListAsync(cancellationToken);
+
+        var byProperty = listingRows
+            .GroupBy(x => x.PropertyId)
+            .ToDictionary(g => g.Key, g => g.First());
+        var propertyIds = byProperty.Keys.ToList();
+        if (propertyIds.Count == 0)
+            return Array.Empty<PropertySummaryForBuyerDto>();
+
+        var properties = await dbContext.Properties
+            .AsNoTracking()
+            .Include(p => p.Tour)
+            .Where(p => propertyIds.Contains(p.Id))
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return properties.Select(p =>
+        {
+            var primary = byProperty[p.Id];
+            return new PropertySummaryForBuyerDto
+            {
+                Id = p.Id,
+                Category = p.Category,
+                Address = p.Address?.Address,
+                Locality = p.Address?.Locality,
+                AdministrativeArea = p.Address?.AdministrativeArea,
+                CountryCode = p.Address?.CountryCode,
+                Area = p.Area,
+                TourId = p.TourId,
+                TourShareToken = p.Tour?.ShareToken,
+                CreatedAt = p.CreatedAt,
+                Price = primary.Price,
+                CurrencyCode = primary.CurrencyCode,
+                CurrencySymbol = primary.CurrencySymbol,
+                ListingType = primary.ListingType
+            };
+        }).ToList();
+    }
+
+    public async Task<ApiResponse<PropertyDetailForBuyerDto>> GetForBuyerAsync(int propertyId, CancellationToken cancellationToken = default)
+    {
+        var property = await dbContext.Properties
+            .AsNoTracking()
+            .Include(p => p.Tour)
+            .FirstOrDefaultAsync(p => p.Id == propertyId && p.Active, cancellationToken);
+        if (property == null)
+            return ApiResponse<PropertyDetailForBuyerDto>.ErrorResponse("Property not found.", code: ErrorCodes.PropertyNotFound);
+
+        var hasListing = await dbContext.PropertyListings
+            .AnyAsync(l => l.PropertyId == propertyId && l.IsActive, cancellationToken);
+        if (!hasListing)
+            return ApiResponse<PropertyDetailForBuyerDto>.ErrorResponse("Property not found.", code: ErrorCodes.PropertyNotFound);
+
+        var listings = await dbContext.PropertyListings
+            .AsNoTracking()
+            .Include(l => l.Currency)
+            .Where(l => l.PropertyId == propertyId && l.IsActive)
+            .Select(l => new ListingLineDto
+            {
+                ListingId = l.Id,
+                ListingType = l.ListingType,
+                Price = l.Price,
+                CurrencyCode = l.Currency.Code,
+                CurrencySymbol = l.Currency.Symbol
+            })
+            .ToListAsync(cancellationToken);
+
+        var dto = new PropertyDetailForBuyerDto
+        {
+            Property = ToResponse(property),
+            TourShareToken = property.Tour?.ShareToken,
+            Listings = listings
+        };
+        return ApiResponse<PropertyDetailForBuyerDto>.SuccessResponse(dto);
+    }
+
     public async Task<ApiResponse<bool>> Delete(int propertyId, int ownerId, CancellationToken cancellationToken = default)
     {
         var property = await dbContext.Properties.FirstOrDefaultAsync(p => p.Id == propertyId && p.OwnerId == ownerId, cancellationToken);

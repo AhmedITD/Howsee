@@ -30,4 +30,5 @@ public static class ErrorCodes
     public const string CurrencyCodeExists = "CURRENCY_CODE_EXISTS";
     public const string PropertyCategoryNotFound = "PROPERTY_CATEGORY_NOT_FOUND";
     public const string PropertyCategoryNameExists = "PROPERTY_CATEGORY_NAME_EXISTS";
+    public const string ListingNotFound = "LISTING_NOT_FOUND";
 }
