@@ -102,7 +102,8 @@ builder.Services.AddHttpClient<IWaylPaymentService, WaylPaymentService>();
 
 builder.Services.Configure<Howsee.Infrastructure.Services.MatterportApiOptions>(
     builder.Configuration.GetSection(Howsee.Infrastructure.Services.MatterportApiOptions.SectionName));
-builder.Services.AddHttpClient<Howsee.Application.Interfaces.Tours.IMatterportApiClient, Howsee.Infrastructure.Services.MatterportApiClient>();
+builder.Services.AddSingleton<Howsee.Infrastructure.Services.MatterportModelClient>();
+builder.Services.AddScoped<Howsee.Application.Interfaces.Tours.IMatterportApiClient, Howsee.Infrastructure.Services.MatterportApiClient>();
 
 builder.Services.AddAuthorization(options =>
 {

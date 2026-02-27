@@ -48,7 +48,7 @@ public class TourController(ITourService tourService, ICurrentUser currentUser, 
         }
         catch (MatterportApiException ex)
         {
-            var isLocked = ex.Code == "model.locked" || (ex.Message?.Contains("model.locked", StringComparison.OrdinalIgnoreCase) ?? false);
+            var isLocked = ex.ErrorCode == "model.locked" || (ex.Message?.Contains("model.locked", StringComparison.OrdinalIgnoreCase) ?? false);
             var code = isLocked ? ErrorCodes.MatterportModelLocked : null;
             var message = isLocked ? "This Matterport model is locked. Unlock it in your Matterport account to access details." : (ex.Message ?? "Matterport API error.");
             return BadRequest(ApiResponse<MatterportModelDetails?>.ErrorResponse(message, code: code));
